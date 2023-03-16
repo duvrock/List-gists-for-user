@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <title>Github Gists Viewer</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.7.1/styles/default.min.css">
+    <style>
+      .wrapper {
+        display: flex;
+        padding: 30px;
+      }
+      .sidebar {
+       width: 25%;
+       height: 25vh;
+       padding-left: 50px;
+      }
+      .main {
+        width: 40%;
+        height: 150vh;
+      }
+      .user {
+        margin-bottom: 20px;
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        cursor: pointer;
+      }
+      .user:hover {
+        background-color: #f4f4f4;
+      }
+      .user img {
+        width: 50px;
+        height: 50px;
+        margin-right: 10px;
+        border-radius: 50%;
+      }
+      .user-info {
+        width: 80%;
+        display: inline-block;
+        vertical-align: top;
+      }
+       .info-btn {
+        background-color: #0066b2;
+        border: none;
+        color: white;
+        padding: 5px 8px;
+        text-align: center;
+        text-decoration: none;
+        display: inline-block;
+        font-size: 12px;
+        border-radius: 5px;
+        cursor: pointer;
+      }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.7.1/highlight.min.js"></script>
+  </head>
+  <body>
+    <div class="wrapper">
+       <div class="sidebar">
+          <H1>User Profile</H1>
+          <div id="profile"></div>
+       </div>
+       <div class="main">
+          <H1>User Profile</H1>
+          <div id="users"></div>
+      </div>
+    </div>
+    <script>
+      const usersDiv = document.querySelector('#users');
+      const profileDiv = document.querySelector('#profile');
+
+      const users = getUsers();
+      console.log(users);
+      showUsers(users);
+
+      async function getUsers() {
+        const response = await fetch(`https://api.github.com/users`);
+        const data = await response.json();
+        return data;
+
+      }
+// Load the user info 
+     async function showUsers(usersPromise) {
+      const users = await usersPromise;
+      const html = users.map(user => {
+        return `
+          <div class="user" data-username="${user.login}">
+            <img src="${user.avatar_url}" alt="Profile picture of ${user.login}">
+            <div class="user-info">
+              <h3>${user.login}</h3>
+              <p>${user.bio || 'No bio available.'}</p>
+            </div>
+             <button class="info-btn">Details</button>
+          </div>
+        `;
+      }).join('');
+      usersDiv.innerHTML = html;
+      const userDivs = document.querySelectorAll('.user');
+      userDivs.forEach(userDiv => {
+        userDiv.addEventListener('click', async () => {
+          const username = userDiv.dataset.username;
+          const id = userDiv.dataset.id;
+          const user = await getUser(username);
+          showProfile(user);
+        });
+      });
+    }
+
+
+      async function getUser(username) {
+        const response = await fetch(`https://api.github.com/users/${username}`);
+        return await response.json();
+      }
+
+      function showProfile(user) {
+        const html = `
+          <img style="border-radius:50%;height:250px;" src="${user.avatar_url}" alt="Profile picture of ${user.login}">
+          <p><strong>Name: </strong>${user.name}</p>
+          <p><strong>User login:</strong> ${user.login}</p>
+          <p><strong>Bio: </strong>${user.bio}</p>
+          <p><strong>Type: </strong>${user.type}</p>
+          <p><strong>Organization URL:</strong>${user.organizations_url}</p>
+          <p><strong>Url:</strong> ${user.url}</p>
+          
+        `;
+        profileDiv.innerHTML = html;
+      }
+    </script>
+  </body>
+</html>
