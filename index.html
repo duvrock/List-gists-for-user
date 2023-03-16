@@ -73,45 +73,59 @@
       console.log(users);
       showUsers(users);
 
+      //preluam datele userilor din adresa Api-ului
       async function getUsers() {
         const response = await fetch(`https://api.github.com/users`);
         const data = await response.json();
         return data;
 
       }
-// Load the user info 
-     async function showUsers(usersPromise) {
+
+      // incarcam informatiile userului 
+      async function showUsers(usersPromise) {
+      let isClicked = false;
       const users = await usersPromise;
-      const html = users.map(user => {
-        return `
-          <div class="user" data-username="${user.login}">
-            <img src="${user.avatar_url}" alt="Profile picture of ${user.login}">
-            <div class="user-info">
-              <h3>${user.login}</h3>
-              <p>${user.bio || 'No bio available.'}</p>
+        const html = users.map(user => {
+          return `
+            <div class="user" data-username="${user.login}" data-id="${user.id}">
+              <img src="${user.avatar_url}" alt="Profile picture of ${user.login}">
+              <div class="user-info">
+                <h3>${user.login}</h3>
+                <p>${user.bio || 'No bio available.'}</p>
+              </div>
+               <button class="info-btn">Details</button>
             </div>
-             <button class="info-btn">Details</button>
-          </div>
-        `;
-      }).join('');
-      usersDiv.innerHTML = html;
-      const userDivs = document.querySelectorAll('.user');
-      userDivs.forEach(userDiv => {
-        userDiv.addEventListener('click', async () => {
+          `;
+        }).join('');
+        usersDiv.innerHTML = html;
+        const userDivs = document.querySelectorAll('.user');
+         userDivs.forEach(userDiv => {
           const username = userDiv.dataset.username;
           const id = userDiv.dataset.id;
+          userDiv.addEventListener('click', async () => {
+             isClicked = true;
+             const user = await getUser(username);
+             showProfile(user);
+             //setam variabila isClicked la false după ce au fost afișate detaliile utilizatorului
+             isClicked = false;
+          });
+        });
+        if (!isClicked) {
+        //Această metodă presupune că există un utilizator cu id-ul 1 în lista de utilizatori pentru al afisa inaintea evenimentului "click"
+          const user1Div = document.querySelector('.user[data-id="1"]');
+          const username = user1Div.dataset.username;
           const user = await getUser(username);
           showProfile(user);
-        });
-      });
+      }
     }
 
-
+    //luam datele pentru fiecare user separat din adresa Api-ului
       async function getUser(username) {
         const response = await fetch(`https://api.github.com/users/${username}`);
         return await response.json();
       }
 
+     //afisam datele in profilul user-ului
       function showProfile(user) {
         const html = `
           <img style="border-radius:50%;height:250px;" src="${user.avatar_url}" alt="Profile picture of ${user.login}">
